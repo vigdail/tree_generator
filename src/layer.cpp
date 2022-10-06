@@ -35,7 +35,7 @@ void TreeLayer::on_update(float dt) {
   gl::set_clear_color({0.3, 0.3, 0.3, 1.0});
   gl::clear();
 
-  const float radius = 7.0f;
+  const float radius = 5.0f;
   const auto time = static_cast<float>(glfwGetTime());
   const float x = radius * std::sin(time);
   const float z = radius * std::cos(time);
@@ -48,7 +48,7 @@ void TreeLayer::on_update(float dt) {
   shader->set_uniform(shader->uniform_location("color"), Color::Tree);
 
   if (i++ < 100) {
-    tree_.grow(0.5f);
+    tree_.grow(0.1f);
     tree_.update_mesh();
     tree_.bound_box.update_mesh();
   }
@@ -74,20 +74,27 @@ void TreeLayer::on_event(const WindowEvent& event) {
 }
 
 void TreeLayer::on_gui() {
+  ImGui::Begin("Tree");
   ImGui::Checkbox("Show bound box", &show_bound_box_);
-  rttr::type class_type = rttr::type::get(tree_);
+  rttr::type class_type = rttr::type::get(tree_.parameters);
   for (const auto& prop: class_type.get_properties()) {
-    rttr::variant value = prop.get_value(tree_);
+    rttr::variant value = prop.get_value(tree_.parameters);
     if (value.is_type<int>()) {
       auto v = value.get_value<int>();
       if (ImGui::InputInt(prop.get_name().to_string().c_str(), &v)) {
-        prop.set_value(tree_, v);
+        prop.set_value(tree_.parameters, v);
       }
     }
     if (value.is_type<float>()) {
       auto v = value.get_value<float>();
       if (ImGui::InputFloat(prop.get_name().to_string().c_str(), &v)) {
-        prop.set_value(tree_, v);
+        prop.set_value(tree_.parameters, v);
+      }
+    }
+     if (value.is_type<bool>()) {
+      auto v = value.get_value<bool>();
+      if (ImGui::Checkbox(prop.get_name().to_string().c_str(), &v)) {
+        prop.set_value(tree_.parameters, v);
       }
     }
   }
@@ -95,4 +102,5 @@ void TreeLayer::on_gui() {
     tree_.generate();
     i = 0;
   }
+  ImGui::End();
 }

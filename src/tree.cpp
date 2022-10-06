@@ -1,6 +1,8 @@
 #include "tree.h"
 
-Tree::Tree() : root{new Node(ratio, spread, split_size)} {
+#include <limits>
+
+Tree::Tree() : root{new Node(&parameters)} {
 }
 
 void Tree::update_mesh() {
@@ -15,25 +17,25 @@ void Tree::update_mesh() {
     const auto d = glm::normalize(node->get_dir() + glm::vec3(1.0f));
     auto n = glm::vec4(glm::normalize(glm::cross(node->get_dir(), d)), 1.0f);
 
-    const glm::mat4 r = glm::rotate(glm::mat4(1.0f), float(M_PI / ring_size), node->get_dir());
+    const glm::mat4 r = glm::rotate(glm::mat4(1.0f), float(M_PI / parameters.ring_size), node->get_dir());
 
     const size_t _b = vertices.size();
 
-    for (int i = 0; i < ring_size; i++) {
+    for (int i = 0; i < parameters.ring_size; i++) {
       indices.push_back(_b + i * 2 + 0);
-      indices.push_back(_b + (i * 2 + 2) % (2 * ring_size));
+      indices.push_back(_b + (i * 2 + 2) % (2 * parameters.ring_size));
       indices.push_back(_b + i * 2 + 1);
 
-      indices.push_back(_b + (i * 2 + 2) % (2 * ring_size));
-      indices.push_back(_b + (i * 2 + 3) % (2 * ring_size));
+      indices.push_back(_b + (i * 2 + 2) % (2 * parameters.ring_size));
+      indices.push_back(_b + (i * 2 + 3) % (2 * parameters.ring_size));
       indices.push_back(_b + i * 2 + 1);
     }
 
-    for (int i = 0; i < ring_size; i++) {
+    for (int i = 0; i < parameters.ring_size; i++) {
       vertices.push_back({start + node->get_radius() * tree_scale[1] * glm::vec3(n)});
       n = r * n;
 
-      vertices.push_back({end + taper * node->get_radius() * tree_scale[1] * glm::vec3(n)});
+      vertices.push_back({end + parameters.taper * node->get_radius() * tree_scale[1] * glm::vec3(n)});
       n = r * n;
     }
 
@@ -61,7 +63,7 @@ void Tree::grow(float feed) {
   root->grow(feed);
 }
 void Tree::generate() {
-  root = std::make_unique<Node>(ratio, spread, split_size);
-  bound_box.min = glm::vec3(1000.0f);
-  bound_box.max = glm::vec3(0.0f);
+  root = std::make_unique<Node>(&parameters);
+  bound_box.min = glm::vec3(std::numeric_limits<float>::max());
+  bound_box.max = glm::vec3(std::numeric_limits<float>::min());
 }

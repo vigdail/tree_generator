@@ -1,17 +1,51 @@
 #pragma once
 #include "mesh.h"
-#include <cmath>
+
 #include <glm/gtx/quaternion.hpp>
+#include <rttr/registration.h>
+
+#include <cmath>
+
 #include <iomanip>
 #include <iostream>
 #include <memory>
+
+struct TreeParameters {
+  int ring_size{12};
+  float taper{0.6f};
+  float ratio{0.3f};
+  float spread{0.5f};
+  float split_size{1.0f};
+  float split_decay{0.3f};
+  bool conserve_area{true};
+  float pass_ratio{0.5f};
+  int local_depth{2};
+  float directedness{0.3f};
+  RTTR_ENABLE()
+};
+
+RTTR_REGISTRATION {
+  using namespace rttr;
+  registration::class_<TreeParameters>("tree_parameters_class")
+      .property("ring_size", &TreeParameters::ring_size)
+      .property("taper", &TreeParameters::taper)
+      .property("ratio", &TreeParameters::ratio)
+      .property("spread", &TreeParameters::spread)
+      .property("split_size", &TreeParameters::split_size)
+      .property("split_decay", &TreeParameters::split_decay)
+      .property("conserve_area", &TreeParameters::conserve_area)
+      .property("pass_ratio", &TreeParameters::pass_ratio)
+      .property("local_depth", &TreeParameters::local_depth)
+      .property("directedness", &TreeParameters::directedness);
+}
+
 class Node {
  public:
-  Node(float ratio, float spread, float split_size) : ratio_{ratio}, spread_{spread}, split_size_{split_size} {
-    srand(time(nullptr)); // TODO: use proper RNG
+  explicit Node(TreeParameters* params) : params_{params} {
+    srand(time(nullptr));// TODO: use proper RNG
   }
 
-  Node(Node* parent, const glm::vec3& dir) : Node(parent->ratio_, parent->spread_, parent->split_size_) {
+  Node(Node* parent, const glm::vec3& dir) : Node(parent->params_) {
     dir_ = dir;
     parent_ = parent;
     depth_ = parent->depth_ + 1;
@@ -58,13 +92,14 @@ class Node {
  private:
   glm::vec3 dir_{0.0f, 1.0f, 0.0f};
   bool is_leaf_{true};
+  TreeParameters* params_;
   int depth_{0};
   float length_{0.0};
   float radius_{0.0};
   float area_{0.1};
-  float ratio_;
-  float spread_;
-  float split_size_;
+  //  float ratio_;
+  //  float spread_;
+  //  float split_size_;
   std::unique_ptr<Node> left_{};
   std::unique_ptr<Node> right_{};
   Node* parent_{};

@@ -4,22 +4,19 @@ void Node::grow(float feed) {
   radius_ = std::sqrt(area_ / static_cast<float>(M_PI));
 
   if (is_leaf_) {
-    float split_decay = 0.3f;
     length_ += std::cbrt(feed);
     feed -= std::cbrt(feed) * area_;
     area_ += feed / length_;
 
-    if (length_ > split_size_ * std::exp(-split_decay * static_cast<float>(depth_))) {
+    if (length_ > params_->split_size * std::exp(-params_->split_decay * static_cast<float>(depth_))) {
       split();
     }
     return;
   }
 
-  float pass_ratio = 0.5f;
-  float pass = pass_ratio;
-  bool conserve_area = true;
+  float pass = params_->pass_ratio;
 
-  if (conserve_area) {
+  if (params_->conserve_area) {
     pass = (left_->area_ + right_->area_) / (left_->area_ + right_->area_ + area_);
   }
 
@@ -30,19 +27,18 @@ void Node::grow(float feed) {
     return;
   }
 
-  left_->grow(feed * ratio_);
-  right_->grow(feed * (1.0f - ratio_));
+  left_->grow(feed * params_->ratio);
+  right_->grow(feed * (1.0f - params_->ratio));
 }
 void Node::split() {
   float flip = rand() % 2 ? -1.0f : 1.0f;
 
-  int local_depth = 2;
-  const glm::vec3 D = calculate_leaf_density_dir(local_depth);
+  const glm::vec3 D = calculate_leaf_density_dir(params_->local_depth);
   const glm::vec3 N = glm::normalize(glm::cross(dir_, D));
   const glm::vec3 M = -N;
 
-  left_ = std::make_unique<Node>(this, glm::mix(flip * spread_ * N, dir_, ratio_));
-  right_ = std::make_unique<Node>(this, glm::mix(flip * spread_ * M, dir_, ratio_));
+  left_ = std::make_unique<Node>(this, glm::mix(flip * params_->spread * N, dir_, params_->ratio));
+  right_ = std::make_unique<Node>(this, glm::mix(flip * params_->spread * M, dir_, params_->ratio));
   is_leaf_ = false;
 }
 glm::vec3 Node::calculate_leaf_density_dir(int depth) const {
@@ -59,9 +55,8 @@ glm::vec3 Node::calculate_leaf_density_dir(int depth) const {
 
   std::function<glm::vec3(const Node*)> leafaverage = [&](const Node* b) -> glm::vec3 {
     if (b->is_leaf_) return b->length_ * b->dir_;
-    return b->length_ * b->dir_ + ratio_ * leafaverage(b->left_.get()) + (1.0f - ratio_) * leafaverage(b->right_.get());
+    return b->length_ * b->dir_ + params_->ratio * leafaverage(b->left_.get()) + (1.0f - params_->ratio) * leafaverage(b->right_.get());
   };
 
-  float directedness = 0.3f;
-  return directedness * glm::normalize(leafaverage(C) - rel) + (1.0f - directedness) * r;
+  return params_->directedness * glm::normalize(leafaverage(C) - rel) + (1.0f - params_->directedness) * r;
 }
