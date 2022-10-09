@@ -18,6 +18,7 @@ class TreeLayer : public Layer {
  private:
   std::shared_ptr<gl::program> shader;
   Tree tree_;
+  Mesh floor_;
   glm::vec3 camera_position_{0.0f, 4.0f, -3.0f};
   glm::mat4 projection_{glm::perspective(glm::radians(60.0f), 1280.0f / 720.0f, 0.01f, 1000.0f)};
   bool show_bound_box_{true};

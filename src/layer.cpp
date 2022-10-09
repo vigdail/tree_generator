@@ -10,8 +10,26 @@ int i = 0;
 
 namespace Color {
 constexpr auto Tree = glm::vec3(1.0f, 0.0f, 0.0f);
+constexpr auto Floor = glm::vec3(0.5f, 0.5f, 0.5f);
 constexpr auto BoundBox = glm::vec3(0.0f, 1.0f, 0.0f);
 }// namespace Color
+
+class MeshFactory {
+ public:
+  static Mesh create_plane(float size = 1.0f) {
+    const std::vector<Vertex> vertices{
+        {glm::vec3(0.5f, 0.0f, 0.5f) * size},
+        {glm::vec3(-0.5f, 0.0f, 0.5f) * size},
+        {glm::vec3(-0.5f, 0.0f, -0.5f) * size},
+        {glm::vec3(0.5f, 0.0f, -0.5f) * size},
+    };
+    const std::vector<uint32_t> indices{0, 2, 1, 2, 0, 3};
+    Mesh mesh;
+    mesh.update(vertices, indices);
+
+    return mesh;
+  }
+};
 
 void load_shader_include(std::string_view name, const std::filesystem::path& filename) {
   std::ifstream stream(filename);
@@ -19,7 +37,7 @@ void load_shader_include(std::string_view name, const std::filesystem::path& fil
   glNamedStringARB(GL_SHADER_INCLUDE_ARB, static_cast<GLint>(name.size()), name.data(), static_cast<GLint>(content.size()), content.c_str());
 }
 
-TreeLayer::TreeLayer() {
+TreeLayer::TreeLayer() : floor_{MeshFactory::create_plane(10.0f)} {
   load_shader_include("/scene.glsl", "../assets/scene.glsl");
   shader = load_shader("../assets/solid.vert", "../assets/solid.frag");
 }
@@ -53,10 +71,15 @@ void TreeLayer::on_update(float dt) {
     tree_.bound_box.update_mesh();
   }
 
-  tree_.mesh.bind();
   gl::set_polygon_mode(GL_FILL);
+  tree_.mesh.bind();
   gl::set_polygon_face_culling_enabled(true);
   auto count = static_cast<int32_t>(tree_.mesh.get_index_count());
+  gl::draw_elements(GL_TRIANGLES, count, GL_UNSIGNED_INT, nullptr);
+
+  floor_.bind();
+  shader->set_uniform(shader->uniform_location("color"), Color::Floor);
+  count = static_cast<int32_t>(floor_.get_index_count());
   gl::draw_elements(GL_TRIANGLES, count, GL_UNSIGNED_INT, nullptr);
 
   if (show_bound_box_) {
@@ -108,11 +131,11 @@ void TreeLayer::on_gui() {
       float min = get_metadata_or_default(prop, MetaData::MinValue, 0.0f);
       float max = get_metadata_or_default(prop, MetaData::MaxValue, 0.0f);
       float step = get_metadata_or_default(prop, MetaData::Step, 1.0f);
-      if (ImGui::DragFloat(prop.get_name().to_string().c_str(), &v, step,  min, max)) {
+      if (ImGui::DragFloat(prop.get_name().to_string().c_str(), &v, step, min, max)) {
         prop.set_value(tree_.parameters, v);
       }
     }
-     if (value.is_type<bool>()) {
+    if (value.is_type<bool>()) {
       auto v = value.get_value<bool>();
       if (ImGui::Checkbox(prop.get_name().to_string().c_str(), &v)) {
         prop.set_value(tree_.parameters, v);
