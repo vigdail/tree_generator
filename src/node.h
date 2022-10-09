@@ -70,9 +70,7 @@ RTTR_REGISTRATION {
 
 class Node {
  public:
-  explicit Node(TreeParameters* params) : params_{params} {
-    srand(time(nullptr));// TODO: use proper RNG
-  }
+  explicit Node(TreeParameters* params) : params_{params} {}
 
   Node(Node* parent, const glm::vec3& dir) : Node(parent->params_) {
     dir_ = dir;

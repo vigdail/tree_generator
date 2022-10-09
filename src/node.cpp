@@ -1,5 +1,9 @@
 #include "node.h"
 
+#include <glm/gtc/random.hpp>
+
+#include <random>
+
 void Node::grow(float feed) {
   radius_ = std::sqrt(area_ / static_cast<float>(M_PI));
 
@@ -31,7 +35,10 @@ void Node::grow(float feed) {
   right_->grow(feed * (1.0f - params_->ratio));
 }
 void Node::split() {
-  float flip = rand() % 2 ? -1.0f : 1.0f;
+  std::random_device rd;
+  std::mt19937 gen(rd());
+  auto dist = std::uniform_int_distribution<>(0, 1);
+  float flip = static_cast<float>(dist(gen)) * 2.0f - 1.0f;
 
   const glm::vec3 D = calculate_leaf_density_dir(params_->local_depth);
   const glm::vec3 N = glm::normalize(glm::cross(dir_, D));
@@ -42,8 +49,7 @@ void Node::split() {
   is_leaf_ = false;
 }
 glm::vec3 Node::calculate_leaf_density_dir(int depth) const {
-  const auto r = glm::vec3(rand() % 100, rand() % 100, rand() % 100) / glm::vec3(100) - glm::vec3(0.5f);
-
+  const auto r = glm::linearRand(glm::vec3(-0.5f), glm::vec3(0.5f));
   if (depth == 0) return r;
 
   const Node* C = this;
