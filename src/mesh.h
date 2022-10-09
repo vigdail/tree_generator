@@ -7,6 +7,7 @@
 
 struct Vertex {
   glm::vec3 pos;
+  glm::vec3 normal{0.0f, 1.0f, 0.0f};
 };
 
 class Mesh {
@@ -27,7 +28,11 @@ class Mesh {
     vertex_array_.set_vertex_buffer(0, vertex_buffer_, 0, sizeof(Vertex));
     vertex_array_.set_element_buffer(index_buffer_);
     vertex_array_.set_attribute_enabled(0, true);
+    vertex_array_.set_attribute_binding(0, 0);
     vertex_array_.set_attribute_format(0, 3, GL_FLOAT, false, 0);
+    vertex_array_.set_attribute_enabled(1, true);
+    vertex_array_.set_attribute_binding(1, 0);
+    vertex_array_.set_attribute_format(1, 3, GL_FLOAT, false, offsetof(Vertex, normal));
     gl::vertex_array::unbind();
 
     index_count_ = index_buffer_.size();

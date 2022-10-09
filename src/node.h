@@ -1,5 +1,6 @@
 #pragma once
 #include "mesh.h"
+#include "reflection.h"
 
 #include <glm/gtx/quaternion.hpp>
 #include <rttr/registration.h>
@@ -9,12 +10,6 @@
 #include <iomanip>
 #include <iostream>
 #include <memory>
-
-enum class MetaData {
-  MinValue,
-  MaxValue,
-  Step,
-};
 
 struct TreeParameters {
   int ring_size{12};

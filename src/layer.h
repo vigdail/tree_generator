@@ -1,5 +1,6 @@
 #pragma once
 
+#include "light.h"
 #include "mesh.h"
 #include "tree.h"
 
@@ -16,7 +17,9 @@ class TreeLayer : public Layer {
   void on_gui() override;
 
  private:
-  std::shared_ptr<gl::program> shader;
+  std::shared_ptr<gl::program> shader_;
+  std::shared_ptr<gl::program> unlit_shader_;
+  Light directional_light_{};
   Tree tree_;
   Mesh floor_;
   glm::vec3 camera_position_{0.0f, 4.0f, -3.0f};

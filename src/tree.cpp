@@ -32,10 +32,10 @@ void Tree::update_mesh() {
     }
 
     for (int i = 0; i < parameters.ring_size; i++) {
-      vertices.push_back({start + node->get_radius() * tree_scale[1] * glm::vec3(n)});
+      vertices.push_back({start + node->get_radius() * tree_scale[1] * glm::vec3(n), n});
       n = r * n;
 
-      vertices.push_back({end + parameters.taper * node->get_radius() * tree_scale[1] * glm::vec3(n)});
+      vertices.push_back({end + parameters.taper * node->get_radius() * tree_scale[1] * glm::vec3(n), n});
       n = r * n;
     }
 
