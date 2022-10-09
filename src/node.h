@@ -10,6 +10,12 @@
 #include <iostream>
 #include <memory>
 
+enum class MetaData {
+  MinValue,
+  MaxValue,
+  Step,
+};
+
 struct TreeParameters {
   int ring_size{12};
   float taper{0.6f};
@@ -27,16 +33,39 @@ struct TreeParameters {
 RTTR_REGISTRATION {
   using namespace rttr;
   registration::class_<TreeParameters>("tree_parameters_class")
-      .property("ring_size", &TreeParameters::ring_size)
-      .property("taper", &TreeParameters::taper)
-      .property("ratio", &TreeParameters::ratio)
-      .property("spread", &TreeParameters::spread)
-      .property("split_size", &TreeParameters::split_size)
-      .property("split_decay", &TreeParameters::split_decay)
+      .property("ring_size", &TreeParameters::ring_size)(
+          metadata(MetaData::MinValue, 3),
+          metadata(MetaData::MaxValue, 24))
+      .property("taper", &TreeParameters::taper)(
+          metadata(MetaData::MinValue, 0.1f),
+          metadata(MetaData::MaxValue, 1.0f),
+          metadata(MetaData::Step, 0.01f))
+      .property("ratio", &TreeParameters::ratio)(
+          metadata(MetaData::MinValue, 0.01f),
+          metadata(MetaData::MaxValue, 0.99f),
+          metadata(MetaData::Step, 0.01f))
+      .property("spread", &TreeParameters::spread)(
+          metadata(MetaData::MinValue, 0.0f),
+          metadata(MetaData::MaxValue, 5.0f),
+          metadata(MetaData::Step, 0.01f))
+      .property("split_size", &TreeParameters::split_size)(
+          metadata(MetaData::MinValue, 0.1f),
+          metadata(MetaData::MaxValue, 5.0f),
+          metadata(MetaData::Step, 0.1f))
+      .property("split_decay", &TreeParameters::split_decay)(
+          metadata(MetaData::MinValue, 0.0f),
+          metadata(MetaData::MaxValue, 1.0f),
+          metadata(MetaData::Step, 0.001f))
       .property("conserve_area", &TreeParameters::conserve_area)
       .property("pass_ratio", &TreeParameters::pass_ratio)
-      .property("local_depth", &TreeParameters::local_depth)
-      .property("directedness", &TreeParameters::directedness);
+      .property("local_depth", &TreeParameters::local_depth)(
+          metadata(MetaData::MinValue, 0),
+          metadata(MetaData::MaxValue, 15),
+          metadata(MetaData::Step, 1))
+      .property("directedness", &TreeParameters::directedness)(
+          metadata(MetaData::MinValue, 0.0f),
+          metadata(MetaData::MaxValue, 1.0f),
+          metadata(MetaData::Step, 0.01f));
 }
 
 class Node {

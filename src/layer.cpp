@@ -73,6 +73,15 @@ void TreeLayer::on_event(const WindowEvent& event) {
   Layer::on_event(event);
 }
 
+template<typename T>
+T get_metadata_or_default(const rttr::property& prop, const rttr::variant& key, const T& default_value) {
+  const auto& meta = prop.get_metadata(key);
+  if (meta.is_valid()) {
+    return meta.template get_value<T>();
+  }
+  return default_value;
+}
+
 void TreeLayer::on_gui() {
   ImGui::Begin("Tree");
   ImGui::Checkbox("Show bound box", &show_bound_box_);
@@ -81,13 +90,25 @@ void TreeLayer::on_gui() {
     rttr::variant value = prop.get_value(tree_.parameters);
     if (value.is_type<int>()) {
       auto v = value.get_value<int>();
-      if (ImGui::InputInt(prop.get_name().to_string().c_str(), &v)) {
-        prop.set_value(tree_.parameters, v);
+      int min = get_metadata_or_default(prop, MetaData::MinValue, 0);
+      int max = get_metadata_or_default(prop, MetaData::MaxValue, 0);
+      assert(min <= max);
+      if (min != max) {
+        if (ImGui::SliderInt(prop.get_name().to_string().c_str(), &v, min, max)) {
+          prop.set_value(tree_.parameters, v);
+        }
+      } else {
+        if (ImGui::DragInt(prop.get_name().to_string().c_str(), &v, 1, min, max)) {
+          prop.set_value(tree_.parameters, v);
+        }
       }
     }
     if (value.is_type<float>()) {
       auto v = value.get_value<float>();
-      if (ImGui::InputFloat(prop.get_name().to_string().c_str(), &v)) {
+      float min = get_metadata_or_default(prop, MetaData::MinValue, 0.0f);
+      float max = get_metadata_or_default(prop, MetaData::MaxValue, 0.0f);
+      float step = get_metadata_or_default(prop, MetaData::Step, 1.0f);
+      if (ImGui::DragFloat(prop.get_name().to_string().c_str(), &v, step,  min, max)) {
         prop.set_value(tree_.parameters, v);
       }
     }
