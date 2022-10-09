@@ -6,7 +6,12 @@
 
 #include <filesystem>
 
-int i = 0;
+int grow_iterations = 0;
+const int max_grow_iterations = 1000;
+float grow_rate = 1.0f;
+float camera_distance = 25.0f;
+float camera_height = 10.0f;
+float camera_target_height = 8.0f;
 
 namespace Color {
 constexpr auto Tree = glm::vec3(1.0f, 0.0f, 0.0f);
@@ -53,20 +58,20 @@ void TreeLayer::on_update(float dt) {
   gl::set_clear_color({0.3, 0.3, 0.3, 1.0});
   gl::clear();
 
-  const float radius = 5.0f;
+  const float radius = camera_distance;
   const auto time = static_cast<float>(glfwGetTime());
   const float x = radius * std::sin(time);
   const float z = radius * std::cos(time);
   camera_position_.x = x;
-  camera_position_.y = 5.0f;
+  camera_position_.y = camera_height;
   camera_position_.z = z;
-  const glm::mat4 view = glm::lookAt(camera_position_, glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+  const glm::mat4 view = glm::lookAt(camera_position_, glm::vec3(0.0f, camera_target_height, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
   const glm::mat4 view_proj = projection_ * view;
   shader->set_uniform(shader->uniform_location("view_proj"), view_proj);
   shader->set_uniform(shader->uniform_location("color"), Color::Tree);
 
-  if (i++ < 100) {
-    tree_.grow(0.1f);
+  if (grow_iterations++ < max_grow_iterations) {
+    tree_.grow(grow_rate);
     tree_.update_mesh();
     tree_.bound_box.update_mesh();
   }
@@ -106,8 +111,18 @@ T get_metadata_or_default(const rttr::property& prop, const rttr::variant& key, 
 }
 
 void TreeLayer::on_gui() {
-  ImGui::Begin("Tree");
+  ImGui::Begin("Parameters");
+
+  ImGui::Text("Camera");
+  ImGui::DragFloat("Distance", &camera_distance, 0.1f, 1.0f, 30.0f);
+  ImGui::DragFloat("Height", &camera_height, 0.1f, 0.0f, 30.0f);
+  ImGui::DragFloat("Target Height", &camera_target_height, 0.1f, 0.0f, 30.0f);
+
+  ImGui::Spacing();
+
+  ImGui::Text("Tree: %d triangles", tree_.mesh.get_index_count() / 3);
   ImGui::Checkbox("Show bound box", &show_bound_box_);
+  ImGui::DragFloat("Grow rate", &grow_rate, 0.01f, 0.0f, 5.0f);
   rttr::type class_type = rttr::type::get(tree_.parameters);
   for (const auto& prop: class_type.get_properties()) {
     rttr::variant value = prop.get_value(tree_.parameters);
@@ -144,7 +159,7 @@ void TreeLayer::on_gui() {
   }
   if (ImGui::Button("Generate")) {
     tree_.generate();
-    i = 0;
+    grow_iterations = 0;
   }
   ImGui::End();
 }

@@ -19,14 +19,14 @@ enum class MetaData {
 struct TreeParameters {
   int ring_size{12};
   float taper{0.6f};
-  float ratio{0.3f};
-  float spread{0.5f};
-  float split_size{1.0f};
-  float split_decay{0.3f};
+  float ratio{0.8f};
+  float spread{1.2f};
+  float split_size{2.0f};
+  float split_decay{0.0f};
   bool conserve_area{true};
   float pass_ratio{0.5f};
-  int local_depth{2};
-  float directedness{0.3f};
+  int local_depth{1};
+  float directedness{0.9f};
   RTTR_ENABLE()
 };
 
@@ -126,9 +126,6 @@ class Node {
   float length_{0.0};
   float radius_{0.0};
   float area_{0.1};
-  //  float ratio_;
-  //  float spread_;
-  //  float split_size_;
   std::unique_ptr<Node> left_{};
   std::unique_ptr<Node> right_{};
   Node* parent_{};
